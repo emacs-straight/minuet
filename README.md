@@ -26,9 +26,18 @@
   - [OpenAI-compatible](#openai-compatible)
   - [OpenAI-FIM-Compatible](#openai-fim-compatible)
 - [Troubleshooting](#troubleshooting)
+- [Contributions](#contributions)
 - [Acknowledgement](#acknowledgement)
 
 # Minuet
+
+[![GNU ELPA badge][gnu-elpa-badge]][gnu-elpa-link]
+[![MELPA badge][melpa-badge]][melpa-link]
+
+[gnu-elpa-link]: https://elpa.gnu.org/packages/minuet.html
+[gnu-elpa-badge]: https://elpa.gnu.org/packages/minuet.svg
+[melpa-link]: https://melpa.org/#/minuet
+[melpa-badge]: https://melpa.org/packages/minuet-badge.svg
 
 Minuet: Dance with LLM in Your Code 💃.
 
@@ -64,8 +73,8 @@ as dancers move during a minuet.
 
 # Installation
 
-`minuet` is available on MELPA and can be installed using your preferred package
-managers.
+`minuet` is available on ELPA and MELPA and can be installed using your
+preferred package managers.
 
 ```elisp
 
@@ -616,6 +625,15 @@ If your setup failed, there are two most likely reasons:
    - Set a longer request timeout (e.g., `request-timeout = 5`)
 
 To diagnose issues, examine the buffer content from `*minuet*`.
+
+# Contributions
+
+Since this package is part of GNU ELPA, substantial contributions require a
+copyright assignment to the Free Software Foundation (FSF).
+
+However, minor contributions—such as small bug fixes or documentation
+improvements—are welcome even without copyright assignment. If you're unsure
+where to begin, feel free to open an issue for guidance.
 
 # Acknowledgement
 
