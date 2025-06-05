@@ -61,6 +61,9 @@ as dancers move during a minuet.
 
 **With minibuffer frontend**:
 
+Note: Previewing insertion results within the buffer requires the
+`consult` package.
+
 ![example-completion-in-region](./assets/minuet-completion-in-region.jpg)
 
 **With overlay ghost text frontend**:
