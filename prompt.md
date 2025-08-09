@@ -72,26 +72,32 @@ The counterpart variables are:
 
 **Prefix First Style**:
 
-You are an AI code completion engine. Provide contextually appropriate completions:
+You are an AI code completion engine. Provide contextually appropriate
+completions:
+
 - Code completions in code context
 - Comment/documentation text in comments
 - String content in string literals
 - Prose in markdown/documentation files
 
 Input markers:
+
 - `<contextAfterCursor>`: Context after cursor
 - `<cursorPosition>`: Current cursor location
 - `<contextBeforeCursor>`: Context before cursor
 
 **Suffix First Style**:
 
-You are an AI code completion engine. Provide contextually appropriate completions:
+You are an AI code completion engine. Provide contextually appropriate
+completions:
+
 - Code completions in code context
 - Comment/documentation text in comments
 - String content in string literals
 - Prose in markdown/documentation files
 
 Input markers:
+
 - `<contextAfterCursor>`: Context after cursor
 - `<cursorPosition>`: Current cursor location
 - `<contextBeforeCursor>`: Context before cursor
@@ -127,40 +133,63 @@ Guidelines:
 ;; suffix-first style
 (defvar minuet-default-fewshots
   `((:role "user"
-     :content "# language: python
+     :content "# language: javascript
 <contextAfterCursor>
+    return result;
+}
 
-fib(5)
+const processedData = transformData(rawData, {
+    uppercase: true,
+    removeSpaces: false
+});
 <contextBeforeCursor>
-def fibonacci(n):
-    <cursorPosition>")
+function transformData(data, options) {
+    const result = [];
+    for (let item of data) {
+        <cursorPosition>")
     (:role "assistant"
-     :content "    '''
-    Recursive Fibonacci implementation
-    '''
-    if n < 2:
-        return n
-    return fib(n - 1) + fib(n - 2)
+     :content "let processed = item;
+        if (options.uppercase) {
+            processed = processed.toUpperCase();
+        }
+        if (options.removeSpaces) {
+            processed = processed.replace(/\s+/g, '');
+        }
+        result.push(processed);
+    }
 <endCompletion>
-    '''
-    Iterative Fibonacci implementation
-    '''
-    a, b = 0, 1
-    for _ in range(n):
-        a, b = b, a + b
-    return a
+if (typeof item === 'string') {
+            let processed = item;
+            if (options.uppercase) {
+                processed = processed.toUpperCase();
+            }
+            if (options.removeSpaces) {
+                processed = processed.replace(/\s+/g, '');
+            }
+            result.push(processed);
+        } else {
+            result.push(item);
+        }
+    }
 <endCompletion>
 ")))
 
 (defvar minuet-default-fewshots-prefix-first
   `((:role "user"
-     :content "# language: python
+     :content "# language: javascript
 <contextBeforeCursor>
-def fibonacci(n):
-    <cursorPosition>
+function transformData(data, options) {
+    const result = [];
+    for (let item of data) {
+        <cursorPosition>
 <contextAfterCursor>
+    return result;
+}
 
-fib(5)")
+const processedData = transformData(rawData, {
+    uppercase: true,
+    removeSpaces: false
+});")
     ,(cadr minuet-default-fewshots)))
 ```
 
@@ -293,41 +322,40 @@ represents the **default setting** applied to Gemini.
     :config
     (setq minuet-provider 'gemini)
 
-    (defvar mg-minuet-gemini-prompt
-        "You are the backend of an AI-powered code completion engine. Your task is to
-provide code suggestions based on the user's input. The user's code will be
-enclosed in markers:
+    (defvar my-minuet-gemini-prompt minuet-default-prompt-prefix-first)
 
-- `<contextAfterCursor>`: Code context after the cursor
-- `<cursorPosition>`: Current cursor location
-- `<contextBeforeCursor>`: Code context before the cursor
-")
-
-    (defvar mg-minuet-gemini-chat-input-template
+    (defvar my-minuet-gemini-chat-input-template
         "{{{:language-and-tab}}}
 <contextBeforeCursor>
 {{{:context-before-cursor}}}<cursorPosition>
 <contextAfterCursor>
 {{{:context-after-cursor}}}")
 
-    (defvar mg-minuet-gemini-fewshots
+    (defvar my-minuet-gemini-fewshots
         `((:role "user"
-           :content "# language: python
+           :content "# language: javascript
 <contextBeforeCursor>
-def fibonacci(n):
-    <cursorPosition>
+function transformData(data, options) {
+    const result = [];
+    for (let item of data) {
+        <cursorPosition>
 <contextAfterCursor>
+    return result;
+}
 
-fib(5)")
+const processedData = transformData(rawData, {
+    uppercase: true,
+    removeSpaces: false
+});")
           ,(cadr minuet-default-fewshots)))
 
     (minuet-set-optional-options minuet-gemini-options
-                                 :prompt 'mg-minuet-gemini-prompt
+                                 :prompt 'my-minuet-gemini-prompt
                                  :system)
     (minuet-set-optional-options minuet-gemini-options
-                                 :template 'mg-minuet-gemini-chat-input-template
+                                 :template 'my-minuet-gemini-chat-input-template
                                  :chat-input)
-    (plist-put minuet-gemini-options :fewshots 'mg-minuet-gemini-fewshots)
+    (plist-put minuet-gemini-options :fewshots 'my-minuet-gemini-fewshots)
 
     (minuet-set-optional-options minuet-gemini-options
                                  :generationConfig
