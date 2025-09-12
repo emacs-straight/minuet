@@ -1047,8 +1047,7 @@ arrive."
            :then
            (lambda (json)
              (when-let* ((result (minuet--stream-decode json get-text-fn)))
-               ;; insert the current result into the completion items list
-               (push result completion-items))
+               (setq completion-items (append completion-items (list result))))
              (setq completion-items (minuet--filter-context-sequence-in-items
                                      completion-items
                                      context))
@@ -1060,7 +1059,7 @@ arrive."
                  (progn
                    (minuet--log (format "%s Request timeout" name))
                    (when-let* ((result (minuet--stream-decode-raw --response-- get-text-fn)))
-                     (push result completion-items)))
+                     (setq completion-items (append completion-items (list result)))))
                (minuet--log (format "An error occured when sending request to %s" name))
                (minuet--log err))
              (setq completion-items
