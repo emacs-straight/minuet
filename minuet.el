@@ -503,8 +503,8 @@ Also cancel any pending requests unless NO-CANCEL is t."
   (add-hook 'post-command-hook #'minuet--on-cursor-moved nil t)
   (when-let* ((suggestions suggestions)
               (cursor-not-moved (not (minuet--cursor-moved-p)))
-              (index (or index 0))
               (total (length suggestions))
+              (index (mod (or index 0) total))
               (suggestion (nth index suggestions))
               ;; 'Display' is used when not at the end-of-line to
               ;; ensure proper overlay positioning. Other methods,
@@ -572,7 +572,8 @@ Also cancel any pending requests unless NO-CANCEL is t."
   (let ((current-buffer (current-buffer))
         (available-p-fn (intern (format "minuet--%s-available-p" minuet-provider)))
         (complete-fn (intern (format "minuet--%s-complete" minuet-provider)))
-        (context (minuet--get-context)))
+        (context (minuet--get-context))
+        (is-first-completion t))
     (unless (funcall available-p-fn)
       (minuet--log (format "Minuet provider %s is not available" minuet-provider))
       (error "Minuet provider %s is not available" minuet-provider))
@@ -582,7 +583,9 @@ Also cancel any pending requests unless NO-CANCEL is t."
                (setq items (seq-uniq items))
                (with-current-buffer current-buffer
                  (when (and items (not (minuet--cursor-moved-p)))
-                   (minuet--display-suggestion items 0)))))))
+                   (minuet--display-suggestion
+                    items (if is-first-completion 0 minuet--current-suggestion-index))))
+               (setq is-first-completion nil)))))
 
 (defun minuet--log (message &optional message-p)
   "Log minuet messages into `minuet-buffer-name'.
