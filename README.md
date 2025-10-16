@@ -470,8 +470,8 @@ Below is the default value:
 
 ```lisp
 (defvar minuet-claude-options
-    `(:model "claude-3-5-haiku-20241022"
-      :max_tokens 512
+    `(:model "claude-haiku-4-5"
+      :max_tokens 256
       :api-key "ANTHROPIC_API_KEY"
       :system
       (:template minuet-default-system-template
