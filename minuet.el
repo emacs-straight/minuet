@@ -4,7 +4,7 @@
 
 ;; Author: Milan Glacier <dev@milanglacier.com>
 ;; Maintainer: Milan Glacier <dev@milanglacier.com>
-;; Version: 0.6.0
+;; Version: 0.7.0
 ;; URL: https://github.com/milanglacier/minuet-ai.el
 ;; Package-Requires: ((emacs "29") (plz "0.9") (dash "2.19.1"))
 
@@ -882,9 +882,21 @@ many lines.  Without a prefix argument, accept only the first line."
                             minuet--current-suggestions))
            (lines (split-string suggestion "\n"))
            (n (or n 1))
-           (selected-lines (seq-take lines n)))
+           (selected-lines (seq-take lines n))
+           (remaining-lines (seq-drop lines n))
+           (remaining-suggestion (when remaining-lines
+                                   (string-join remaining-lines "\n"))))
       (minuet--cleanup-suggestion)
-      (insert (string-join selected-lines "\n")))))
+      (insert (string-join selected-lines "\n"))
+      (when remaining-suggestion
+        (insert "\n") ;; There is a remaining suggestion, so move to the next line.
+        ;; NOTE: We do not need to worry about Minuet
+        ;; automatically triggering the next suggestion upon
+        ;; continuous acceptance.  Minuet only attempts
+        ;; auto-suggestion when the last command was not a Minuet
+        ;; command. Since we have just accepted partial lines, the
+        ;; last command is indeed a Minuet command.
+        (minuet--display-suggestion (list remaining-suggestion) 0)))))
 
 ;;;###autoload
 (defun minuet-complete-with-minibuffer ()
