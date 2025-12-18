@@ -1,2 +1,2 @@
 ;; Generated package description from minuet.el  -*- mode: lisp-data; no-byte-compile: t -*-
-(define-package "minuet" "0.7.1.0.20251215.125648" "Code completion using LLM" '((emacs "29") (plz "0.9") (dash "2.19.1")) :commit "34a74905961d2120d01bcb9b09183e9e9c63b161" :authors '(("Milan Glacier" . "dev@milanglacier.com")) :maintainer '("Milan Glacier" . "dev@milanglacier.com") :url "https://github.com/milanglacier/minuet-ai.el")
+(define-package "minuet" "0.7.1.0.20251217.24427" "Code completion using LLM" '((emacs "29") (plz "0.9") (dash "2.19.1")) :commit "f422f4c7dc2ff19580a432d6849a766e01f34fd2" :authors '(("Milan Glacier" . "dev@milanglacier.com")) :maintainer '("Milan Glacier" . "dev@milanglacier.com") :url "https://github.com/milanglacier/minuet-ai.el")
