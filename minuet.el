@@ -340,17 +340,17 @@ const processedData = transformData(rawData, {
   "Config options for Minuet Claude provider.")
 
 (defvar minuet-openai-options
-  `(:model "gpt-4.1-mini"
+  `(:model "gpt-5.4-nano"
     :api-key "OPENAI_API_KEY"
     :end-point "https://api.openai.com/v1/chat/completions"
     :system
     (:template minuet-default-system-template
-     :prompt minuet-default-prompt
+     :prompt minuet-default-prompt-prefix-first
      :guidelines minuet-default-guidelines
      :n-completions-template minuet-default-n-completion-template)
-    :fewshots minuet-default-fewshots
+    :fewshots minuet-default-fewshots-prefix-first
     :chat-input
-    (:template minuet-default-chat-input-template
+    (:template minuet-default-chat-input-template-prefix-first
      :language-and-tab minuet--default-chat-input-language-and-tab-function
      :context-before-cursor minuet--default-chat-input-before-cursor-function
      :context-after-cursor minuet--default-chat-input-after-cursor-function)
