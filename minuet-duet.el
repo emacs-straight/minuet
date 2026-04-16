@@ -574,7 +574,7 @@ CURSOR-CHAR is the cursor glyph string."
         (setq last-paired-overlay
               (minuet-duet--make-overlay buf-line-start buf-line-end
                                          'face 'minuet-duet-delete-face
-                                         'after-string (concat "  " chunks)))))
+                                         'after-string chunks))))
     ;; Extra deleted lines (orig-count > pair-count)
     (cl-loop for offset from pair-count below orig-count do
              (let* ((buf-line-start (minuet-duet--nth-line-pos region-start (+ orig-start offset)))
@@ -641,7 +641,7 @@ CURSOR-CHAR is the cursor glyph string."
               (line-text (or (nth proposed-row minuet-duet--proposed-lines) ""))
               (chunks (minuet-duet--make-chunks line-text 'shadow (plist-get c :col) cursor-char)))
     (minuet-duet--make-overlay buf-line-end buf-line-end
-                               'after-string (concat "  " chunks))))
+                               'after-string chunks)))
 
 (defun minuet-duet--render-preview ()
   "Render the duet preview overlays for the current prediction."
@@ -758,11 +758,15 @@ CALLBACK receives the full response text or nil."
                   (funcall callback nil))))))))
 
 (defun minuet-duet--openai-complete (context callback)
-  "Send a duet request using OpenAI."
+  "Send a duet request using OpenAI.
+CONTEXT is the chat context from `minuet-duet--build-context'.
+CALLBACK is a function that receives the full response text or nil."
   (minuet-duet--openai-complete-base minuet-duet-openai-options context callback))
 
 (defun minuet-duet--openai-compatible-complete (context callback)
-  "Send a duet request using an OpenAI-compatible API."
+  "Send a duet request using an OpenAI-compatible API.
+CONTEXT is the chat context from `minuet-duet--build-context'.
+CALLBACK is a function that receives the full response text or nil."
   (minuet-duet--openai-complete-base minuet-duet-openai-compatible-options
                                      context callback))
 
@@ -969,7 +973,6 @@ CONTEXT and CALLBACK as in `minuet-duet--openai-complete-base'."
   (interactive)
   (minuet-duet--clear-state))
 
-;;;###autoload
 (defun minuet-duet-visible-p ()
   "Return non-nil if a duet preview is currently visible."
   (and minuet-duet--overlays
