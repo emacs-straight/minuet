@@ -42,9 +42,9 @@ Use MESSAGE in the assertion failure."
 
 (ert-deftest minuet-duet-parse-valid ()
   "Valid response with one cursor marker."
-  (let* ((text (concat "<editable_region_start>\n"
-                       "hello <cursor_position>world\n"
-                       "<editable_region_end>"))
+  (let* ((text (concat minuet-duet-editable-region-start-marker "\n"
+                       "hello " minuet-duet-cursor-position-marker "world\n"
+                       minuet-duet-editable-region-end-marker))
          (result (minuet-duet--parse-response text)))
     (should result)
     (should (equal (car result) '("hello world")))
@@ -53,11 +53,11 @@ Use MESSAGE in the assertion failure."
 
 (ert-deftest minuet-duet-parse-multiline ()
   "Valid multi-line response."
-  (let* ((text (concat "<editable_region_start>\n"
+  (let* ((text (concat minuet-duet-editable-region-start-marker "\n"
                        "line1\n"
-                       "line2<cursor_position>\n"
+                       "line2" minuet-duet-cursor-position-marker "\n"
                        "line3\n"
-                       "<editable_region_end>"))
+                       minuet-duet-editable-region-end-marker))
          (result (minuet-duet--parse-response text)))
     (should result)
     (should (equal (car result) '("line1" "line2" "line3")))
@@ -66,47 +66,51 @@ Use MESSAGE in the assertion failure."
 
 (ert-deftest minuet-duet-parse-missing-start-marker ()
   "Missing start marker returns nil."
-  (let ((text "hello <cursor_position>world\n<editable_region_end>"))
+  (let ((text (concat "hello " minuet-duet-cursor-position-marker "world\n"
+                      minuet-duet-editable-region-end-marker)))
     (should (null (minuet-duet--parse-response text)))))
 
 (ert-deftest minuet-duet-parse-missing-end-marker ()
   "Missing end marker returns nil."
-  (let ((text "<editable_region_start>\nhello <cursor_position>world"))
+  (let ((text (concat minuet-duet-editable-region-start-marker
+                      "\nhello " minuet-duet-cursor-position-marker "world")))
     (should (null (minuet-duet--parse-response text)))))
 
 (ert-deftest minuet-duet-parse-duplicate-start-marker ()
   "Duplicate start markers returns nil."
-  (let ((text (concat "<editable_region_start>\n<editable_region_start>\n"
-                      "hello <cursor_position>world\n"
-                      "<editable_region_end>")))
+  (let ((text (concat minuet-duet-editable-region-start-marker "\n"
+                      minuet-duet-editable-region-start-marker "\n"
+                      "hello " minuet-duet-cursor-position-marker "world\n"
+                      minuet-duet-editable-region-end-marker)))
     (should (null (minuet-duet--parse-response text)))))
 
 (ert-deftest minuet-duet-parse-missing-cursor-marker ()
   "Missing cursor marker returns nil."
-  (let ((text (concat "<editable_region_start>\n"
+  (let ((text (concat minuet-duet-editable-region-start-marker "\n"
                       "hello world\n"
-                      "<editable_region_end>")))
+                      minuet-duet-editable-region-end-marker)))
     (should (null (minuet-duet--parse-response text)))))
 
 (ert-deftest minuet-duet-parse-duplicate-cursor-marker ()
   "Duplicate cursor markers returns nil."
-  (let ((text (concat "<editable_region_start>\n"
-                      "hello <cursor_position>wor<cursor_position>ld\n"
-                      "<editable_region_end>")))
+  (let ((text (concat minuet-duet-editable-region-start-marker "\n"
+                      "hello " minuet-duet-cursor-position-marker
+                      "wor" minuet-duet-cursor-position-marker "ld\n"
+                      minuet-duet-editable-region-end-marker)))
     (should (null (minuet-duet--parse-response text)))))
 
 (ert-deftest minuet-duet-parse-newline-trimming ()
   "Leading and trailing newlines inside markers are trimmed."
   ;; Two leading newlines: first trimmed, second kept as empty first line
-  (let* ((text (concat "<editable_region_start>\n\n"
-                       "<cursor_position>hello\n"
-                       "<editable_region_end>"))
+  (let* ((text (concat minuet-duet-editable-region-start-marker "\n\n"
+                       minuet-duet-cursor-position-marker "hello\n"
+                       minuet-duet-editable-region-end-marker))
          (result (minuet-duet--parse-response text)))
     (should result)
     ;; The inner text after removing first \n is "\n<cursor>hello"
     ;; Trailing \n is also trimmed, so inner = "\n<cursor>hello" -> "" and "hello"
-    ;; Actually: inner after first trim = "\n<cursor_position>hello"
-    ;; trailing trim: "\n<cursor_position>hello" (no trailing \n to trim)
+    ;; Actually: inner after first trim = "\n<cursor>hello"
+    ;; trailing trim: "\n<cursor>hello" (no trailing \n to trim)
     ;; So lines = ("" "hello"), cursor at line 1 col 0
     (should (equal (car result) '("" "hello")))))
 
@@ -199,32 +203,113 @@ Use MESSAGE in the assertion failure."
       (should-not (member duplicated-after (car result)))
       (should (= (plist-get (cdr result) :col) (length replacement))))))
 
-(ert-deftest minuet-duet-filter-text-returns-edge-cases ()
-  "Nil TEXT and nil CONTEXT are handled without filtering."
-  (let ((context '(:non-editable-region-before "before"
-                   :non-editable-region-after "after")))
-    (should (null (minuet-duet--filter-text nil context)))
-    (should (equal (minuet-duet--filter-text "unchanged" nil) "unchanged"))))
-
-(ert-deftest minuet-duet-filter-text-trims-non-editable-overlaps ()
-  "Duplicated text from neighboring non-editable regions is trimmed."
+(ert-deftest minuet-duet-parse-trims-prefix-before-recording-cursor ()
+  "Duplicated prefix context is trimmed before cursor position is recorded."
   (let* ((minuet-duet-filter-region-before-length 3)
-         (minuet-duet-filter-region-after-length 3)
          (context '(:non-editable-region-before "left prefix"
-                    :non-editable-region-after "suffix right"))
-         (text "prefix<cursor_position>body suffix"))
-    (should
-     (equal (minuet-duet--filter-text text context)
-            "<cursor_position>body "))))
+                    :non-editable-region-after ""))
+         (response (concat minuet-duet-editable-region-start-marker "\n"
+                           "prefix" minuet-duet-cursor-position-marker
+                           "body\n"
+                           minuet-duet-editable-region-end-marker))
+         (result (minuet-duet--parse-response response context)))
+    (should result)
+    (should (equal (car result) '("body")))
+    (should (= (plist-get (cdr result) :row-offset) 0))
+    (should (= (plist-get (cdr result) :col) 0))))
 
-(ert-deftest minuet-duet-filter-text-respects-minimum-match-length ()
-  "Overlaps shorter than the configured thresholds are kept."
-  (let* ((minuet-duet-filter-region-before-length 10)
-         (minuet-duet-filter-region-after-length 10)
+(ert-deftest minuet-duet-parse-trims-prefix-boundary-line ()
+  "Duplicated prefix trimming also removes the boundary newline."
+  (let* ((minuet-duet-filter-region-before-length 3)
+         (context '(:non-editable-region-before "left\nprefix"
+                    :non-editable-region-after ""))
+         (response (concat minuet-duet-editable-region-start-marker "\n"
+                           "prefix\n"
+                           minuet-duet-cursor-position-marker
+                           "body\n"
+                           minuet-duet-editable-region-end-marker))
+         (result (minuet-duet--parse-response response context)))
+    (should result)
+    (should (equal (car result) '("body")))
+    (should (= (plist-get (cdr result) :row-offset) 0))
+    (should (= (plist-get (cdr result) :col) 0))))
+
+(ert-deftest minuet-duet-parse-preserves-leading-blank-line-without-prefix-trim ()
+  "Leading blank lines are preserved when prefix deduplication does not trim."
+  (let* ((minuet-duet-filter-region-before-length 3)
+         (context '(:non-editable-region-before "unrelated"
+                    :non-editable-region-after ""))
+         (response (concat minuet-duet-editable-region-start-marker "\n\n"
+                           minuet-duet-cursor-position-marker
+                           "body\n"
+                           minuet-duet-editable-region-end-marker))
+         (result (minuet-duet--parse-response response context)))
+    (should result)
+    (should (equal (car result) '("" "body")))
+    (should (= (plist-get (cdr result) :row-offset) 1))
+    (should (= (plist-get (cdr result) :col) 0))))
+
+(ert-deftest minuet-duet-parse-trims-suffix-after-removing-cursor ()
+  "Duplicated suffix context is trimmed after removing the cursor marker."
+  (let* ((minuet-duet-filter-region-after-length 3)
+         (context '(:non-editable-region-before ""
+                    :non-editable-region-after "suffix right"))
+         (response (concat minuet-duet-editable-region-start-marker "\n"
+                           "body suf" minuet-duet-cursor-position-marker
+                           "fix\n"
+                           minuet-duet-editable-region-end-marker))
+         (result (minuet-duet--parse-response response context)))
+    (should result)
+    (should (equal (car result) '("body ")))
+    (should (= (plist-get (cdr result) :row-offset) 0))
+    (should (= (plist-get (cdr result) :col) 5))))
+
+(ert-deftest minuet-duet-parse-trims-suffix-boundary-line ()
+  "Duplicated suffix trimming also removes the boundary newline."
+  (let* ((minuet-duet-filter-region-after-length 3)
+         (context '(:non-editable-region-before ""
+                    :non-editable-region-after "suffix\nright"))
+         (response (concat minuet-duet-editable-region-start-marker "\n"
+                           "body"
+                           minuet-duet-cursor-position-marker
+                           "\nsuffix\n"
+                           minuet-duet-editable-region-end-marker))
+         (result (minuet-duet--parse-response response context)))
+    (should result)
+    (should (equal (car result) '("body")))
+    (should (= (plist-get (cdr result) :row-offset) 0))
+    (should (= (plist-get (cdr result) :col) 4))))
+
+(ert-deftest minuet-duet-parse-preserves-trailing-blank-line-without-suffix-trim ()
+  "Trailing blank lines are preserved when suffix deduplication does not trim."
+  (let* ((minuet-duet-filter-region-after-length 3)
+         (context '(:non-editable-region-before ""
+                    :non-editable-region-after "unrelated"))
+         (response (concat minuet-duet-editable-region-start-marker "\n"
+                           "body"
+                           minuet-duet-cursor-position-marker
+                           "\n\n"
+                           minuet-duet-editable-region-end-marker))
+         (result (minuet-duet--parse-response response context)))
+    (should result)
+    (should (equal (car result) '("body" "")))
+    (should (= (plist-get (cdr result) :row-offset) 0))
+    (should (= (plist-get (cdr result) :col) 4))))
+
+(ert-deftest minuet-duet-parse-clamps-cursor-after-suffix-trimming ()
+  "Cursor moves to the final text end when suffix trimming removes its index."
+  (let* ((minuet-duet-filter-region-after-length 3)
          (context '(:non-editable-region-before "left prefix"
                     :non-editable-region-after "suffix right"))
-         (text "prefix<cursor_position>body suffix"))
-    (should (equal (minuet-duet--filter-text text context) text))))
+         (response (concat minuet-duet-editable-region-start-marker "\n"
+                           "body suffix"
+                           minuet-duet-cursor-position-marker "\n"
+                           minuet-duet-editable-region-end-marker))
+         (result (minuet-duet--parse-response response context)))
+    (should result)
+    (should (equal (car result) '("body ")))
+    (should (= (plist-get (cdr result) :row-offset) 0))
+    (should (= (plist-get (cdr result) :col) 5))))
 
 ;;;;;
 ;; Context extraction tests
@@ -237,6 +322,9 @@ Use MESSAGE in the assertion failure."
     (should (string-match-p "Guidelines:" result))
     (should (string-match-p
              (regexp-quote minuet-duet-editable-region-start-marker)
+             result))
+    (should (string-match-p
+             (regexp-quote minuet-duet-editable-region-end-marker)
              result))
     (should (string-match-p
              (regexp-quote minuet-duet-cursor-position-marker)
