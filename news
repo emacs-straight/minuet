@@ -1,3 +1,22 @@
+# Version 0.8.0 (2026-05-18)
+
+## Breaking Changes
+
+- Make `minuet-before-cursor-filter-length` and
+  `minuet-after-cursor-filter-length` dynamic depending on provider: FIM
+  providers now default to `0` (no filtering), while chat providers retain their
+  previous defaults.
+
+## Features
+
+- **Experimental Next Edit Prediction**: Add `minuet-duet` for experimental next
+  edit prediction, and `minuet-duet-active-mode` to enable it.
+- `transform` option can now be used with all providers (`openai`, `gemini`,
+  `claude`), not just `openai_fim_compatible`.
+- Change default `openai-compatible` model to `deepseek-v4-flash` with
+  prefix-first style.
+- Change default `openai` provider model to `gpt-5.4-nano`.
+
 # Version 0.7.1 (2025-12-15)
 
 ## Breaking Changes
@@ -103,39 +122,5 @@ This maintenance release focuses on reducing the ELPA tarball size.
 - Added `.elpaignore` file to exclude unnecessary files from tarball.
 
 # Version 0.5.1 (2025-04-03)
-
-Minuet is now available on GNU ELPA.
-
-## Breaking Changes
-
-- The default service for `openai_compatible` provider is now OpenRouter.
-
-## Documentation
-
-- Updated to note the policy of GNU ELPA. The contribution section has also been
-  revised.
-
-# Version 0.5.0 (2025-03-28)
-
-## Breaking Changes
-
-- Modified the Gemini provider's default prompt strategy to use the new **Prefix
-  First** structure.
-- Other providers will continue to use their previous default prompt
-  configurations.
-
-## Features
-
-- Add a new "Prefix-First" prompt structure for chat LLMs.
-
-# Version 0.4.4 (2025-03-10)
-
-## Features
-
-- `minuet-configure-provider` can configure api-key as a named function.
-
-## Documentation
-
-- Update LLM provider example from Fireworks to Openrouter.
 ...
 ...
